@@ -97,7 +97,7 @@ ch, row, col = 3, 160, 320  # Trimmed image format
 
 
 model = Sequential()
-model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape = (row, col, sh), output_shape=(ch, row, col)))
+model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape = (row, col, ch)))
 model.add(Cropping2D(cropping = ((60,25), (0, 0)))) # Crops 70 fom the tp, 5 from the bottom, 0 from the left, 0 from the right.
 model.add(Convolution2D(24, 5, 5, activation = 'relu'))
 model.add(MaxPooling2D())
