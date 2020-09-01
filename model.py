@@ -78,7 +78,7 @@ def generator(samples, batch_size=32):
 
 
 
-nbepoch = 5
+nbepoch = 15
 batch_size=32
 ch, row, col = 3, 160, 320  # Trimmed image format
 
@@ -98,9 +98,12 @@ validation_generator = generator(validation_samples, batch_size=batch_size)
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape = (row, col, ch)))
 model.add(Cropping2D(cropping = ((60,25), (0, 0)))) # Crops 70 fom the tp, 5 from the bottom, 0 from the left, 0 from the right.
-model.add(Conv2D(filters=24,kernel_size=(5,5),strides=(2,2),activation="relu"))
-model.add(Conv2D(filters=36,kernel_size=(5,5),strides=(2,2),activation="relu"))
-model.add(Conv2D(filters=48,kernel_size=(5,5),strides=(2,2),activation="relu"))
+model.add(Conv2D(filters=24,kernel_size=(5,5),activation="relu"))
+Model.add(MaxPooling2D())
+model.add(Conv2D(filters=36,kernel_size=(5,5),activation="relu"))
+Model.add(MaxPooling2D())
+model.add(Conv2D(filters=48,kernel_size=(5,5),activation="relu"))
+Model.add(MaxPooling2D())
 model.add(Conv2D(filters=64,kernel_size=(3,3),activation="relu"))
 model.add(Conv2D(filters=64,kernel_size=(3,3),activation="relu"))
 model.add(Flatten())
