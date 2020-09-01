@@ -8,14 +8,7 @@ import os
 import sklearn
 from sklearn.model_selection import train_test_split
 
-samples = []
-with open('../data/driving_log.csv') as csvfile:
-    reader = csv.reader(csvfile)
-    for line in reader:
-        samples.append(line)
 
-train_samples, validation_samples = train_test_split(samples, test_size=0.2)
-nbepoch = 5
 
 def plot_model(model, train_generator, train_samples, validation_generator, validation_samples, nbepochs):
 
@@ -39,7 +32,7 @@ def plot_model(model, train_generator, train_samples, validation_generator, vali
 
 def generator(samples, batch_size=32):
     num_samples = len(samples)
-    base_path = '../data/'
+    base_path = './data/'
     correction_factor = [0.25, 0, -0.25] # Read http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf    
     while 1: # Loop forever so the generator never terminates
         shuffle(samples)
@@ -80,6 +73,15 @@ def generator(samples, batch_size=32):
             y_train = np.array(measurements)
             yield sklearn.utils.shuffle(X_train, y_train)
 
+samples = []
+with open('./data/driving_log.csv') as csvfile:
+    reader = csv.reader(csvfile)
+    for line in reader:
+        samples.append(line)
+
+train_samples, validation_samples = train_test_split(samples, test_size=0.2)
+nbepoch = 5
+
 # Set our batch size
 batch_size=32
 
@@ -110,8 +112,11 @@ model.add(Convolution2D(64, 3, 3, activation = 'relu'))
 model.add(MaxPooling2D())
 model.add(Flatten())
 model.add(Dense(1164))
+model.add(Dropout(0.5))
 model.add(Dense(100))
+model.add(Dropout(0.5))
 model.add(Dense(50))
+model.add(Dropout(0.5))
 model.add(Dense(10))
 model.add(Dense(1))
 
