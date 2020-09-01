@@ -7,7 +7,10 @@ import numpy as np
 import os
 import sklearn
 from sklearn.model_selection import train_test_split
-
+from keras.models import Sequential
+from keras.layers import Flatten, Dense
+from keras.layers.convolutional import Convolution2D
+from keras.layers.pooling import MaxPooling2D
 
 
 def plot_model(model, train_generator, train_samples, validation_generator, validation_samples, nbepochs):
@@ -91,10 +94,7 @@ validation_generator = generator(validation_samples, batch_size=batch_size)
 
 ch, row, col = 3, 160, 320  # Trimmed image format
 
-from keras.models import Sequential
-from keras.layers import Flatten, Dense
-from keras.layers.convolutional import Convolution2D
-from keras.layers.pooling import Convolution2D
+
 
 
 model = Sequential()
