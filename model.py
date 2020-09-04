@@ -14,7 +14,8 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 import random
 from os import path
-
+data_path = 'data1'
+print ("Analyzing data from directory %s" % data1)
 def plot_model(model, train_generator, train_samples, validation_generator, validation_samples, nbepochs):
 
     history_object = model.fit_generator(train_generator, validation_data = 
@@ -36,7 +37,7 @@ def plot_model(model, train_generator, train_samples, validation_generator, vali
 
 def generator(samples, batch_size=32):
     num_samples = len(samples)
-    base_path = './data/'
+    base_path = './%s/'  % data_path
     correction_factor = [0.25, 0, -0.25] # Read http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf    
     while 1: # Loop forever so the generator never terminates
         samples = shuffle(samples)
@@ -86,7 +87,7 @@ ch, row, col = 3, 160, 320  # Trimmed image format
 
 # compile and train the model using the generator function
 samples = []
-with open('./data/driving_log.csv') as csvfile:
+with open('./%s/driving_log.csv' % data_path) as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         samples.append(line)
@@ -95,7 +96,7 @@ train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 train_generator = generator(train_samples, batch_size=batch_size)
 validation_generator = generator(validation_samples, batch_size=batch_size)
 
-latest_model_name = "model-latest.h5"
+latest_model_name = "model.h5"
 if path.exists(latest_model_name):
     print("Opening existing model %s" % latest_model_name)
     model = load_model(latest_model_name)
