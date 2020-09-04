@@ -14,8 +14,8 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 import random
 from os import path
-data_path = 'data1'
-print ("Analyzing data from directory %s" % data1)
+data_path = 'data3'
+print ("Analyzing data from directory %s" % data_path)
 def plot_model(model, train_generator, train_samples, validation_generator, validation_samples, nbepochs):
 
     history_object = model.fit_generator(train_generator, validation_data = 
@@ -87,7 +87,7 @@ ch, row, col = 3, 160, 320  # Trimmed image format
 
 # compile and train the model using the generator function
 samples = []
-with open('./%s/driving_log.csv' % data_path) as csvfile:
+with open('./' + data_path + '/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         samples.append(line)
