@@ -1,0 +1,170 @@
+# **Behavioral Cloning** 
+
+## Writeup Template
+
+---
+
+**Behavioral Cloning Project**
+
+The goals / steps of this project is to bring a deep understanding about the influence of data on the training of a convolutional network.
+
+The aim of this project was to map pictures with a car's steering angle such that a model generated out of a convolutional network would be able to drive a car in a simulator.
+
+We learnt how to generate data out of a car simulator. Driving along the route was however not enough as say for example a part of a route is straight, thus the steering angle is zero. 
+
+Now say during the test phase, the car is entering the strainght part with an angle different than the one used during the training. The car might be shifting to one side of the road and the model might not be able to correct the steering angle as it learnt that when driving on straight routes the steering angle is 0.
+
+I will come up with more details about such pitfalls later on in this document.
+
+The project consisted of:
+
+* Using the simulator to collect data of good driving behavior
+* Building, a convolution neural network in Keras that predicts steering angles from images
+* Training and validating the model with a training and validation set
+* Testing that the model successfully drives around track one without leaving the road
+
+
+---
+
+#### List of the provided files
+
+My project includes the following files:
+* model.py contains the script to create, train and improve the model: this works on Udacity GPU and GoogleColab.
+* drive.py for driving the car in autonomous mode
+  * I did not need to modify this file: I used the Udacity simulator for convenience.
+* model.h5 contains the trained convolution neural network 
+
+#### Source code
+##### model.py
+The script is started with:
+```sh
+python model.py
+```
+The script will check whether a model `model.h5` exists. 
+  * If the model is found, the script will read and training will extend the model knowledge. 
+    * When the training is finished the file `model.h5` will be overwritten as a new model.
+    * This new saved model will be used for the testing phase consisting of driving the car in autonomous mode.
+  * If the model `model.h5` does not exist, then the whole pipeline is created (see below for more details).
+
+This approach is similar to transfer learning and was very useful to fix some issues adding new training data to a model feeling unconfortable in some situations.
+
+Regarding generators
+
+  * At the begining I wanted to use Google Colab to train my model as Google provide GPU for free for 12 hours within a free session.
+    * Generators were not working correctly with Google Colab: The version of Keras was not able to link the generators with the input parameters.
+    * To avoid fighting with version issues I simply used a boolean defining whether the model was to be trained on GoogleColab or on Udacity. 
+      * On Google Colab `colab = True` in the script, no generators were used.
+      * On Udacity `colab = False in the script`, generators were used.
+
+
+##### drive.py
+Using the Udacity provided simulator and udacity's drive.py file, the car can be driven autonomously around the track by executing 
+```sh
+python drive.py model.h5
+``` 
+
+
+### Model Architecture and Training Strategy
+
+#### Model description
+
+I based my model on http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
+
+In addition to the description I added dropout to reduce overfitting. See lines 106 to 128 in the file `model.py`.
+
+
+* Despite gray images had provided good results in the previous project I tried RGB ones here and had very good results either.
+
+* I started with the normalization of the image using a Kera lambda layer: Having the normalization defined as a step of the model allows to have the same step on images on which the trained model will be applied.
+
+* Then I cropped the image to keep only the relevant part of the route: 
+    * I did not want the model to be distracted with unrelevant parts of the image: only the route was necessary. 
+    * As this cropping is happening in the model we would get it as well for the images applied on the trained model.
+
+* The convolution started after this:
+  * I followed the model proposed by NVidia except that the image reduction was done with Max Pooling stages (NVidia was suggesting using a stride of 2x2 but I considered using a Max Pooling Layer more useful). 
+  * In addition each convolutional layer was using a relu activation function to introduce some non linearity.: 
+  Thus the network was:
+    * 5x5 filter, depth of 24
+    * 5x5 filter, depth of 36
+    * 5x5 filter, depth of 48
+    * 3x3 filter, depth of 64
+
+* Then I flattened the image:
+  * On Udacity  GPU, I connected the convolutional network to a dense network reducing the number of output to 100.
+  * NVidia was proposing 1164, I did so in GoogleColab but to have a faster model I tried to remove this satge on Udacity GPU and this was perfectly fine.
+
+* Each dense network is preceeded by a dropout stage of 50% (see below for more information about this).
+
+* The expected output being a linear value we needed to have only one output (more than one output would be useful for classification: here we want to predict a steering angle).
+
+* Finally I used MSE as loss methd and Adam as an optimizer.
+
+
+
+#### Reducing overfiting
+
+I used several techniques to reduce overfitting:
+
+1. As explained above, one approach to reduce overfitting consisted of inserting dropout layers. Such layers define a probability regarding how many inputs should be discarded.
+
+* Here I configured dropout layers to 50% thus discarding randomly half of the inputs: See lines 121, 123, 125.
+
+2. Another technique to reduce overfitting consists of extending the data set modifying images during the training phase such that the network can better generalize.
+
+* Such images are created randomly. Hence in addition to existing data set I created:
+
+    * 50% of flipped images (flipping images means taking the opposite of the steering angle).
+    
+    * Shifted images by a random value comprised between 5 and -5
+    
+3. The simulator provided 3 images for each steering angle. Each of the image was related to one camera (One located on the fron t left, one centered and one on the front right). 
+
+* However if we want the right and left camera to be used to train a view based on a centered camera, the steering angle must be adapted.
+
+* I simply applied a correction factor of +0.25 on the image coming from the left camera and -0.25 on the image coming from the right camera.
+
+4. An additional training information consisted to drive along the route in the opposite direction. 
+
+* Again the idea of this step is to help the network to generalize its learning.
+
+5. One piece is still missing: what to do when the car goes too close to one side of the road. In other words how to teach the network how to recover such cases.
+
+* The idea consists of adding sets of images where the car is driving from the side of the road to the middle.
+
+* Obvisously images when the car moves the side of the road should never be used for training.
+
+* These kind of images are not only important during curves but as well when the road is straight: without such information the model does not know how to set a steering angle different than zero if the car is shifting to one side or the other of the road.
+
+* Another interesting aspect is when the appearance of the side of the road changes. In this tour many curves were looking similar on their side but some of the curves were different and this is exactly where my model was initially unable to handle such steps.
+
+* Adding some more images driving the car from the side to the center when such side aspects happened solved the problem.
+
+* To acomplish these additional steps I simply trained further my model (using a technique similar to transfer learning as explained before).
+
+
+#### Model parameter tuning
+
+The model used an Adam optimizer, so the learning rate was not tuned manually (See `model.py` line 128).
+
+### Model Architecture and Training Strategy
+
+#### Solution Design Approach
+
+Before starting this project I decided to spend quite some time reading litterature: I consider as a good practice not reinventing the wheel.
+
+I found the following document very interesting and decided to start with it:
+http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf    
+
+If it would not have been working fine my next plans were to:
+1. Try with gray images
+2. Try to resize the image in the pipeline to have exatly the input size proposed by NVidia.
+3. Try to help the model generalizing adding some images rotated, blurred or with lower constrast.
+4. use the other route to add even more data set.
+5. Check for other approach proposed in different papers.
+
+However all this was not necessary, the model worked smoothly.
+
+As a default practice in ML, I split my data into training set and validation set (20% for validation set).
+
+I had tried to use a number of epoch of 15, however I realized that 5 were enough as the loss was kept constant for the rest of the computation: This is where Google Colab was very helpful as I did not need to use my Udacity GPU credits to get good values for the loss.
